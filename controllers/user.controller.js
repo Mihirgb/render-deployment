@@ -37,26 +37,43 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
+        const { email, password } = req.body;
+        const existingUser = await User.findOne({ email: email });
 
-        const { email, password } = req.body
-        const existingemail = await User.findOne({ email: email })
-        if (existingemail && bcrypt.compare(password, existingemail.password)) {
-            generateTokenandSetCookie(existingemail._id, res)
-            return res.status(201).json("Login successful")
+        if (!existingUser) {
+            return res.status(401).json({ message: "Invalid email or password" });
         }
-        else if (!existingemail) {
-            return res.status(401).json("Invalid email or password");
 
+        const isMatch = await bcrypt.compare(password, existingUser.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid email or password" });
         }
-        else if (password !== existingemail.password) {
-            return res.status(401).json({ id: existingemail._id, msg: "Invalid email or password" });
 
-        }
+        // Generate token and set cookie
+        const token = generateTokenandSetCookie(existingUser._id, res);
+
+        // Log headers before sending response
+        console.log("Response Headers:", res.getHeaders());
+        console.log("Cookies:", req.cookies);
+
+        return res.status(200).json({
+            message: "Login successful",
+            user: {
+                id: existingUser._id,
+                email: existingUser.email,
+                name: existingUser.name,
+            },
+            token: token,
+            headers: res.getHeaders(),
+            cookies: req.cookies, // Returns all cookies
+        });
+
+    } catch (err) {
+        console.error("Login Error:", err);
+        return res.status(500).json({ error: "Internal server error" });
     }
-    catch (err) {
-        res.status(500).json({ error: "Internal server error" })
-    }
-}
+};
+
 
 export const logout = (req, res) => {
     try {

@@ -7,9 +7,19 @@ import userRoutes from './routes/user.routes.js';
 
 const port = process.env.PORT || 4000;
 dotenv.config();
-
+const allowedOrigins = ["http://localhost:5173", "https://blog-app-seven-silk.vercel.app/"];
 const app=express();
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, origin); // Reflect origin dynamically
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials:true,
+    allowedHeaders: "Content-Type, Authorization"
+}));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
 app.use(cookieParser())//middleware for parsing cookies
