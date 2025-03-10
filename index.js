@@ -16,7 +16,6 @@ const allowedOrigins = [
 const app=express();
 app.use(cors({
     origin: (origin, callback) => {
-        console.log('Request origin:', origin); // Debug log
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {

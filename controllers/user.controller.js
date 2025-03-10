@@ -19,7 +19,7 @@ export const signup = async (req, res) => {
         })
 
         if (newuser) {
-            generateTokenandSetCookie(newuser._id, res)
+            await generateTokenandSetCookie(newuser._id, res)
             await newuser.save()
             res.status(201).json({ _id: newuser._id, message: "User created successfully" })
         }
@@ -50,11 +50,7 @@ export const login = async (req, res) => {
         }
 
         // Generate token and set cookie
-        const token = generateTokenandSetCookie(existingUser._id, res);
-
-        // Log headers before sending response
-        console.log("Response Headers:", res.getHeaders());
-        console.log("Cookies:", req.cookies);
+        const token = await generateTokenandSetCookie(existingUser._id, res);
 
         return res.status(200).json({
             message: "Login successful",
@@ -77,13 +73,18 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
     try {
-        res.cookie('token', '', {
+        res.clearCookie('token', {
             httpOnly: true,
             secure: true,
             sameSite: 'none',
             path: '/',
-            maxAge: 0
-        });
+        });  
+        res.clearCookie('token', { 
+            httpOnly: true, 
+            secure: true, 
+            sameSite: 'none', 
+            path: '/api' // Try clearing specific paths if needed
+        });      
         res.status(200).json({ message: "Logged out successfully" });
     }
     catch (error) {
